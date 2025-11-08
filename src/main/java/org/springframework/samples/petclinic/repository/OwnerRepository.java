@@ -70,7 +70,7 @@ public interface OwnerRepository {
 	Collection<Owner> findAll() throws DataAccessException;
 	
     /**
-     * Delete an <code>Owner</code> to the data store by <code>Owner</code>.
+     * Delete an <code>Owner</code> to the data store by <code>Owner</code>./
      *
      * @param owner the <code>Owner</code> to delete
      * 
