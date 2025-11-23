@@ -1,27 +1,27 @@
 pipeline {
     agent any
-    
+
     tools {
-        maven 'Maven'
-        jdk 'JDK-11'
+        maven 'my-maven' 
+        jdk 'my-jdk'
     }
-    
+
     environment {
-        SONAR_TOKEN = credentials('sonar-token')
+        SONAR_SERVER_NAME = 'sonar-server'
     }
-    
+
     stages {
+        // 1. Baixar el codi del repositori [cite: 57]
         stage('Checkout') {
             steps {
-                echo 'Clonant repositori...'
                 checkout scm
             }
         }
-        
+
+        // 2. Compilar i executar tests [cite: 58]
         stage('Build & Tests') {
             steps {
-                echo 'Compilant i executant tests...'
-                bat 'mvn clean verify'
+                sh 'mvn clean verify'
             }
             post {
                 always {
@@ -29,48 +29,41 @@ pipeline {
                 }
             }
         }
-        
-        stage('Coverage') {
+
+        // 3. Generar i Arxivar Cobertura [cite: 59]
+        stage('Coverage Report') {
             steps {
-                echo 'Generant informe de cobertura...'
-                bat 'mvn jacoco:report'
+                sh 'mvn jacoco:report'
             }
             post {
-                always {
-                    publishHTML([
-                        reportDir: 'target/site/jacoco',
-                        reportFiles: 'index.html',
-                        reportName: 'Jacoco Coverage Report'
-                    ])
-                    archiveArtifacts artifacts: 'target/site/jacoco/**/*', fingerprint: true
+                success {
+                    archiveArtifacts artifacts: '**/target/site/jacoco/**/*', allowEmptyArchive: true
+                    jacoco execPattern: '**/target/jacoco.exec',
+                           classPattern: '**/target/classes',
+                           sourcePattern: 'src/main/java',
+                           inclusionPattern: '**/*.class'
                 }
             }
         }
-        
-        stage('SonarQube Scan') {
+
+        // 4. SonarQube Scan [cite: 60]
+        stage('SonarQube Analysis') {
             steps {
-                echo 'Analitzant qualitat del codi...'
-                withSonarQubeEnv('SonarQube') {
-                    bat "sonar-scanner -Dsonar.projectKey=petclinic-backend -Dsonar.login=${SONAR_TOKEN}"
+                script {
+                    withSonarQubeEnv(SONAR_SERVER_NAME) {
+                        sh 'mvn sonar:sonar'
+                    }
                 }
             }
         }
-        
+
+        // 5. Quality Gate (Valorat positivament) [cite: 66]
         stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
-        }
-    }
-    
-    post {
-        success {
-            echo 'Pipeline executat amb èxit!'
-        }
-        failure {
-            echo 'Pipeline ha fallat. Revisa els logs.'
         }
     }
 }
