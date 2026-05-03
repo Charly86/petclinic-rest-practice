@@ -25,13 +25,19 @@ import org.springframework.samples.petclinic.rest.api.VisitsApi;
 import org.springframework.samples.petclinic.rest.dto.VisitDto;
 import org.springframework.samples.petclinic.rest.dto.VisitFieldsDto;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.query.PagedResult;
+import org.springframework.samples.petclinic.service.query.QueryPageRequest;
+import org.springframework.samples.petclinic.service.query.QueryRequestParser;
+import org.springframework.samples.petclinic.service.query.VisitQueryCriteria;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.transaction.Transactional;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Vitaliy Fedoriv
@@ -41,6 +47,7 @@ import java.util.List;
 @CrossOrigin(exposedHeaders = "errors, content-type")
 @RequestMapping("api")
 public class VisitRestController implements VisitsApi {
+    private static final Set<String> VISIT_SORT_FIELDS = Set.of("id", "date", "petId");
 
     private final ClinicService clinicService;
 
@@ -54,12 +61,18 @@ public class VisitRestController implements VisitsApi {
 
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @Override
-    public ResponseEntity<List<VisitDto>> listVisits() {
-        List<Visit> visits = new ArrayList<>(this.clinicService.findAllVisits());
-        if (visits.isEmpty()) {
+    public ResponseEntity<List<VisitDto>> listVisits(Integer petId, LocalDate dateFrom, LocalDate dateTo,
+                                                     String descriptionContains, Integer page, Integer size,
+                                                     String sort) {
+        QueryPageRequest pageRequest = QueryRequestParser.parsePageRequest(page, size, sort, VISIT_SORT_FIELDS);
+        QueryRequestParser.validateInclusiveRange(dateFrom, dateTo, "dateFrom", "dateTo");
+        VisitQueryCriteria criteria = new VisitQueryCriteria(petId, dateFrom, dateTo, descriptionContains);
+        PagedResult<Visit> visits = this.clinicService.findVisits(criteria, pageRequest);
+        if (visits.content().isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(new ArrayList<>(visitMapper.toVisitsDto(visits)), HttpStatus.OK);
+        HttpHeaders headers = paginationHeaders(visits);
+        return new ResponseEntity<>(new ArrayList<>(visitMapper.toVisitsDto(visits.content())), headers, HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
@@ -106,6 +119,15 @@ public class VisitRestController implements VisitsApi {
         }
         this.clinicService.deleteVisit(visit);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    private HttpHeaders paginationHeaders(PagedResult<?> pagedResult) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Page-Number", Integer.toString(pagedResult.page()));
+        headers.add("X-Page-Size", Integer.toString(pagedResult.size()));
+        headers.add("X-Total-Elements", Long.toString(pagedResult.totalElements()));
+        headers.add("X-Total-Pages", Integer.toString(pagedResult.totalPages()));
+        return headers;
     }
 
 }

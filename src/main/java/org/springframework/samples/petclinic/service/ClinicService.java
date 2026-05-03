@@ -26,6 +26,11 @@ import org.springframework.samples.petclinic.model.PetType;
 import org.springframework.samples.petclinic.model.Specialty;
 import org.springframework.samples.petclinic.model.Vet;
 import org.springframework.samples.petclinic.model.Visit;
+import org.springframework.samples.petclinic.service.query.OwnerQueryCriteria;
+import org.springframework.samples.petclinic.service.query.PagedResult;
+import org.springframework.samples.petclinic.service.query.PetQueryCriteria;
+import org.springframework.samples.petclinic.service.query.QueryPageRequest;
+import org.springframework.samples.petclinic.service.query.VisitQueryCriteria;
 
 /**
  * Mostly used as a facade so all controllers have a single point of entry
@@ -37,12 +42,14 @@ public interface ClinicService {
 
 	Pet findPetById(int id) throws DataAccessException;
 	Collection<Pet> findAllPets() throws DataAccessException;
+	PagedResult<Pet> findPets(PetQueryCriteria criteria, QueryPageRequest pageRequest) throws DataAccessException;
 	void savePet(Pet pet) throws DataAccessException;
 	void deletePet(Pet pet) throws DataAccessException;
 
 	Collection<Visit> findVisitsByPetId(int petId);
 	Visit findVisitById(int visitId) throws DataAccessException;
 	Collection<Visit> findAllVisits() throws DataAccessException;
+	PagedResult<Visit> findVisits(VisitQueryCriteria criteria, QueryPageRequest pageRequest) throws DataAccessException;
 	void saveVisit(Visit visit) throws DataAccessException;
 	void deleteVisit(Visit visit) throws DataAccessException;
 	Vet findVetById(int id) throws DataAccessException;
@@ -52,6 +59,7 @@ public interface ClinicService {
 	void deleteVet(Vet vet) throws DataAccessException;
 	Owner findOwnerById(int id) throws DataAccessException;
 	Collection<Owner> findAllOwners() throws DataAccessException;
+	PagedResult<Owner> findOwners(OwnerQueryCriteria criteria, QueryPageRequest pageRequest) throws DataAccessException;
 	void saveOwner(Owner owner) throws DataAccessException;
 	void deleteOwner(Owner owner) throws DataAccessException;
 	Collection<Owner> findOwnerByLastName(String lastName) throws DataAccessException;

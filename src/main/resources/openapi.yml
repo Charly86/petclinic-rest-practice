@@ -95,16 +95,64 @@ paths:
       tags:
         - owner
       operationId: listOwners
-      summary: Lists pet owners
-      description: Returns an array of pet owners.
+      summary: Lists pet owners with advanced querying
+      description: Returns a filtered, sorted and paginated array of pet owners.
       parameters:
         - name: lastName
           in: query
-          description: Last name.
+          description: Last name prefix filter.
           required: false
           schema:
             type: string
             example: Davis
+        - name: firstName
+          in: query
+          description: First name prefix filter.
+          required: false
+          schema:
+            type: string
+            example: George
+        - name: city
+          in: query
+          description: City prefix filter.
+          required: false
+          schema:
+            type: string
+            example: Madison
+        - name: telephone
+          in: query
+          description: Exact telephone filter.
+          required: false
+          schema:
+            type: string
+            example: "6085551023"
+        - name: page
+          in: query
+          description: Zero-based page index.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: Page size. Must be between 1 and 100.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: sort
+          in: query
+          description: Sort format field,direction. Allowed fields for owners are id,lastName,firstName,city.
+          required: false
+          schema:
+            type: string
+            default: id,asc
+            example: lastName,desc
       responses:
         200:
           description: Owner details found and returned.
@@ -113,12 +161,38 @@ paths:
               description: An ID for this version of the response.
               schema:
                 type: string
+            X-Page-Number:
+              description: Current page index.
+              schema:
+                type: integer
+                format: int32
+            X-Page-Size:
+              description: Current page size.
+              schema:
+                type: integer
+                format: int32
+            X-Total-Elements:
+              description: Total elements matching applied filters.
+              schema:
+                type: integer
+                format: int64
+            X-Total-Pages:
+              description: Total pages matching applied filters.
+              schema:
+                type: integer
+                format: int32
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Owner'
+        400:
+          description: Invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
         304:
           description: Not modified.
           headers:
@@ -769,8 +843,75 @@ paths:
       tags:
         - pet
       operationId: listPets
-      summary: Lists pet
-      description: Returns an array of pet .
+      summary: Lists pets with advanced querying
+      description: Returns a filtered, sorted and paginated array of pets.
+      parameters:
+        - name: name
+          in: query
+          description: Case-insensitive contains filter on pet name.
+          required: false
+          schema:
+            type: string
+            example: Ros
+        - name: typeId
+          in: query
+          description: Exact pet type id filter.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: ownerId
+          in: query
+          description: Exact owner id filter.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: birthDateFrom
+          in: query
+          description: Inclusive lower bound for birth date.
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+        - name: birthDateTo
+          in: query
+          description: Inclusive upper bound for birth date.
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+        - name: page
+          in: query
+          description: Zero-based page index.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: Page size. Must be between 1 and 100.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: sort
+          in: query
+          description: Sort format field,direction. Allowed fields for pets are id,name,birthDate,typeId,ownerId.
+          required: false
+          schema:
+            type: string
+            default: id,asc
+            example: name,asc
       responses:
         200:
           description: Pet types found and returned.
@@ -779,12 +920,38 @@ paths:
               description: An ID for this version of the response.
               schema:
                 type: string
+            X-Page-Number:
+              description: Current page index.
+              schema:
+                type: integer
+                format: int32
+            X-Page-Size:
+              description: Current page size.
+              schema:
+                type: integer
+                format: int32
+            X-Total-Elements:
+              description: Total elements matching applied filters.
+              schema:
+                type: integer
+                format: int64
+            X-Total-Pages:
+              description: Total pages matching applied filters.
+              schema:
+                type: integer
+                format: int32
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pet'
+        400:
+          description: Invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
         304:
           description: Not modified.
           headers:
@@ -970,8 +1137,67 @@ paths:
       tags:
         - visit
       operationId: listVisits
-      summary: Lists visits
-      description: Returns an array of visit .
+      summary: Lists visits with advanced querying
+      description: Returns a filtered, sorted and paginated array of visits.
+      parameters:
+        - name: petId
+          in: query
+          description: Exact pet id filter.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: dateFrom
+          in: query
+          description: Inclusive lower bound for visit date.
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2026-01-01"
+        - name: dateTo
+          in: query
+          description: Inclusive upper bound for visit date.
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2026-01-31"
+        - name: descriptionContains
+          in: query
+          description: Case-insensitive contains filter on description.
+          required: false
+          schema:
+            type: string
+            example: shot
+        - name: page
+          in: query
+          description: Zero-based page index.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: Page size. Must be between 1 and 100.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: sort
+          in: query
+          description: Sort format field,direction. Allowed fields for visits are id,date,petId.
+          required: false
+          schema:
+            type: string
+            default: id,asc
+            example: date,desc
       responses:
         200:
           description: visits found and returned.
@@ -980,12 +1206,38 @@ paths:
               description: An ID for this version of the response.
               schema:
                 type: string
+            X-Page-Number:
+              description: Current page index.
+              schema:
+                type: integer
+                format: int32
+            X-Page-Size:
+              description: Current page size.
+              schema:
+                type: integer
+                format: int32
+            X-Total-Elements:
+              description: Total elements matching applied filters.
+              schema:
+                type: integer
+                format: int64
+            X-Total-Pages:
+              description: Total pages matching applied filters.
+              schema:
+                type: integer
+                format: int32
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Visit'
+        400:
+          description: Invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
         304:
           description: Not modified.
           headers:

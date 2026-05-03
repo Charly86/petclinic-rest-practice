@@ -48,6 +48,11 @@ public interface VisitRepository {
 	
 	Collection<Visit> findAll() throws DataAccessException;
 
+    /**
+     * Retrieve visits for advanced query processing (filters, pagination, sorting).
+     */
+    Collection<Visit> findAllForAdvancedQuery() throws DataAccessException;
+
 	void delete(Visit visit) throws DataAccessException;
 
 }

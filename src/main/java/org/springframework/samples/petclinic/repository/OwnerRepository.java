@@ -68,6 +68,11 @@ public interface OwnerRepository {
      * found)
      */
 	Collection<Owner> findAll() throws DataAccessException;
+
+    /**
+     * Retrieve owners for advanced query processing (filters, pagination, sorting).
+     */
+    Collection<Owner> findAllForAdvancedQuery() throws DataAccessException;
 	
     /**
      * Delete an <code>Owner</code> to the data store by <code>Owner</code>.

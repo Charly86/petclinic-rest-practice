@@ -68,6 +68,11 @@ public interface PetRepository {
 	Collection<Pet> findAll() throws DataAccessException;
 
     /**
+     * Retrieve pets for advanced query processing (filters, pagination, sorting).
+     */
+    Collection<Pet> findAllForAdvancedQuery() throws DataAccessException;
+
+    /**
      * Delete an <code>Pet</code> to the data store by <code>Pet</code>.
      *
      * @param pet the <code>Pet</code> to delete

@@ -17,19 +17,26 @@
 package org.springframework.samples.petclinic.rest.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.mapper.PetMapper;
 import org.springframework.samples.petclinic.model.Pet;
 import org.springframework.samples.petclinic.rest.api.PetsApi;
 import org.springframework.samples.petclinic.rest.dto.PetDto;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.query.PagedResult;
+import org.springframework.samples.petclinic.service.query.PetQueryCriteria;
+import org.springframework.samples.petclinic.service.query.QueryPageRequest;
+import org.springframework.samples.petclinic.service.query.QueryRequestParser;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Vitaliy Fedoriv
@@ -39,6 +46,7 @@ import java.util.List;
 @CrossOrigin(exposedHeaders = "errors, content-type")
 @RequestMapping("api")
 public class PetRestController implements PetsApi {
+    private static final Set<String> PET_SORT_FIELDS = Set.of("id", "name", "birthDate", "typeId", "ownerId");
 
     private final ClinicService clinicService;
 
@@ -61,12 +69,17 @@ public class PetRestController implements PetsApi {
 
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @Override
-    public ResponseEntity<List<PetDto>> listPets() {
-        List<PetDto> pets = new ArrayList<>(petMapper.toPetsDto(this.clinicService.findAllPets()));
-        if (pets.isEmpty()) {
+    public ResponseEntity<List<PetDto>> listPets(String name, Integer typeId, Integer ownerId, LocalDate birthDateFrom,
+                                                 LocalDate birthDateTo, Integer page, Integer size, String sort) {
+        QueryPageRequest pageRequest = QueryRequestParser.parsePageRequest(page, size, sort, PET_SORT_FIELDS);
+        QueryRequestParser.validateInclusiveRange(birthDateFrom, birthDateTo, "birthDateFrom", "birthDateTo");
+        PetQueryCriteria criteria = new PetQueryCriteria(name, typeId, ownerId, birthDateFrom, birthDateTo);
+        PagedResult<Pet> pets = this.clinicService.findPets(criteria, pageRequest);
+        if (pets.content().isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(pets, HttpStatus.OK);
+        HttpHeaders headers = paginationHeaders(pets);
+        return new ResponseEntity<>(new ArrayList<>(petMapper.toPetsDto(pets.content())), headers, HttpStatus.OK);
     }
 
 
@@ -93,6 +106,15 @@ public class PetRestController implements PetsApi {
         }
         this.clinicService.deletePet(pet);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    private HttpHeaders paginationHeaders(PagedResult<?> pagedResult) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Page-Number", Integer.toString(pagedResult.page()));
+        headers.add("X-Page-Size", Integer.toString(pagedResult.size()));
+        headers.add("X-Total-Elements", Long.toString(pagedResult.totalElements()));
+        headers.add("X-Total-Pages", Integer.toString(pagedResult.totalPages()));
+        return headers;
     }
 
 }

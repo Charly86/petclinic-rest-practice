@@ -28,6 +28,10 @@ import org.springframework.samples.petclinic.model.Visit;
 import org.springframework.samples.petclinic.rest.api.OwnersApi;
 import org.springframework.samples.petclinic.rest.dto.*;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.query.OwnerQueryCriteria;
+import org.springframework.samples.petclinic.service.query.PagedResult;
+import org.springframework.samples.petclinic.service.query.QueryPageRequest;
+import org.springframework.samples.petclinic.service.query.QueryRequestParser;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +42,7 @@ import jakarta.transaction.Transactional;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Vitaliy Fedoriv
@@ -47,6 +52,7 @@ import java.util.List;
 @CrossOrigin(exposedHeaders = "errors, content-type")
 @RequestMapping("/api")
 public class OwnerRestController implements OwnersApi {
+    private static final Set<String> OWNER_SORT_FIELDS = Set.of("id", "lastName", "firstName", "city");
 
     private final ClinicService clinicService;
 
@@ -68,17 +74,16 @@ public class OwnerRestController implements OwnersApi {
 
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @Override
-    public ResponseEntity<List<OwnerDto>> listOwners(String lastName) {
-        Collection<Owner> owners;
-        if (lastName != null) {
-            owners = this.clinicService.findOwnerByLastName(lastName);
-        } else {
-            owners = this.clinicService.findAllOwners();
-        }
-        if (owners.isEmpty()) {
+    public ResponseEntity<List<OwnerDto>> listOwners(String lastName, String firstName, String city, String telephone,
+                                                     Integer page, Integer size, String sort) {
+        QueryPageRequest pageRequest = QueryRequestParser.parsePageRequest(page, size, sort, OWNER_SORT_FIELDS);
+        OwnerQueryCriteria criteria = new OwnerQueryCriteria(lastName, firstName, city, telephone);
+        PagedResult<Owner> owners = this.clinicService.findOwners(criteria, pageRequest);
+        if (owners.content().isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(ownerMapper.toOwnerDtoCollection(owners), HttpStatus.OK);
+        HttpHeaders headers = paginationHeaders(owners);
+        return new ResponseEntity<>(ownerMapper.toOwnerDtoCollection(owners.content()), headers, HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
@@ -191,5 +196,14 @@ public class OwnerRestController implements OwnersApi {
             }
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    private HttpHeaders paginationHeaders(PagedResult<?> pagedResult) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Page-Number", Integer.toString(pagedResult.page()));
+        headers.add("X-Page-Size", Integer.toString(pagedResult.size()));
+        headers.add("X-Total-Elements", Long.toString(pagedResult.totalElements()));
+        headers.add("X-Total-Pages", Integer.toString(pagedResult.totalPages()));
+        return headers;
     }
 }

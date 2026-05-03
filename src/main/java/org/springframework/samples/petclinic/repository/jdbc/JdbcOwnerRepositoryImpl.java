@@ -168,6 +168,11 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 	    return owners;
 	}
 
+    @Override
+    public Collection<Owner> findAllForAdvancedQuery() throws DataAccessException {
+        return findAll();
+    }
+
 	@Override
 	@Transactional
 	public void delete(Owner owner) throws DataAccessException {

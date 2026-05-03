@@ -15,6 +15,7 @@
  */
 package org.springframework.samples.petclinic.repository.springdatajpa;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.context.annotation.Profile;
@@ -38,4 +39,9 @@ public interface SpringDataPetRepository extends PetRepository, Repository<Pet, 
     @Override
     @Query("SELECT ptype FROM PetType ptype ORDER BY ptype.name")
     List<PetType> findPetTypes() throws DataAccessException;
+
+    @Override
+    default Collection<Pet> findAllForAdvancedQuery() {
+        return findAll();
+    }
 }

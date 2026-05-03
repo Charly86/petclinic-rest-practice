@@ -76,6 +76,11 @@ public class JpaVisitRepositoryImpl implements VisitRepository {
         return this.em.createQuery("SELECT v FROM Visit v").getResultList();
 	}
 
+    @Override
+    public Collection<Visit> findAllForAdvancedQuery() throws DataAccessException {
+        return findAll();
+    }
+
 	@Override
 	public void delete(Visit visit) throws DataAccessException {
         this.em.remove(this.em.contains(visit) ? visit : this.em.merge(visit));

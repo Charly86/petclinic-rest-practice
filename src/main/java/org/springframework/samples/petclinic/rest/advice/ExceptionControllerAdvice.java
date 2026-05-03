@@ -22,11 +22,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.rest.controller.BindingErrorsResponse;
+import org.springframework.samples.petclinic.service.query.QueryValidationException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.net.URI;
 import java.time.Instant;
@@ -109,6 +111,14 @@ public class ExceptionControllerAdvice {
             return ResponseEntity.status(status).body(detail);
         }
         return ResponseEntity.status(status).build();
+    }
+
+    @ExceptionHandler({QueryValidationException.class, MethodArgumentTypeMismatchException.class, IllegalArgumentException.class})
+    @ResponseBody
+    public ResponseEntity<ProblemDetail> handleQueryValidationException(Exception ex, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemDetail detail = this.detailBuild(ex, status, request.getRequestURL());
+        return ResponseEntity.status(status).body(detail);
     }
 
 }

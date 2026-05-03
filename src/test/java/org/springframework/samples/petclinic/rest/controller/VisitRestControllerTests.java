@@ -31,6 +31,7 @@ import org.springframework.samples.petclinic.model.PetType;
 import org.springframework.samples.petclinic.model.Visit;
 import org.springframework.samples.petclinic.rest.advice.ExceptionControllerAdvice;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.query.PagedResult;
 import org.springframework.samples.petclinic.service.clinicService.ApplicationTestConfig;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
@@ -43,6 +44,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -139,11 +141,14 @@ class VisitRestControllerTests {
     @Test
     @WithMockUser(roles="OWNER_ADMIN")
     void testGetAllVisitsSuccess() throws Exception {
-    	given(this.clinicService.findAllVisits()).willReturn(visits);
+    	given(this.clinicService.findVisits(any(), any()))
+            .willReturn(new PagedResult<>(visits, 0, 20, visits.size(), 1));
         this.mockMvc.perform(get("/api/visits")
         	.accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
+            .andExpect(header().string("X-Page-Number", "0"))
+            .andExpect(header().string("X-Page-Size", "20"))
         	.andExpect(jsonPath("$.[0].id").value(2))
         	.andExpect(jsonPath("$.[0].description").value("rabies shot"))
         	.andExpect(jsonPath("$.[1].id").value(3))
@@ -154,10 +159,19 @@ class VisitRestControllerTests {
     @WithMockUser(roles="OWNER_ADMIN")
     void testGetAllVisitsNotFound() throws Exception {
     	visits.clear();
-    	given(this.clinicService.findAllVisits()).willReturn(visits);
+    	given(this.clinicService.findVisits(any(), any()))
+            .willReturn(new PagedResult<>(new ArrayList<>(), 0, 20, 0, 0));
         this.mockMvc.perform(get("/api/visits")
         	.accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles="OWNER_ADMIN")
+    void testGetAllVisitsWithMaliciousSortReturnsBadRequest() throws Exception {
+        this.mockMvc.perform(get("/api/visits?sort=date%20desc;select%20*%20from%20users,asc")
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
     }
 
     @Test

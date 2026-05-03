@@ -19,6 +19,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.samples.petclinic.model.*;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.query.OwnerQueryCriteria;
+import org.springframework.samples.petclinic.service.query.PagedResult;
+import org.springframework.samples.petclinic.service.query.PetQueryCriteria;
+import org.springframework.samples.petclinic.service.query.QueryPageRequest;
+import org.springframework.samples.petclinic.service.query.SortDirection;
+import org.springframework.samples.petclinic.service.query.SortOption;
+import org.springframework.samples.petclinic.service.query.VisitQueryCriteria;
 import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
@@ -499,6 +506,41 @@ abstract class AbstractClinicServiceTests {
                     actual -> actual.getName().equals(expected.getName())
                     && actual.getId().equals(expected.getId()))).isTrue();
         }
+    }
+
+    @Test
+    void shouldFindOwnersWithAdvancedQueryAndStableSorting() {
+        OwnerQueryCriteria criteria = new OwnerQueryCriteria("D", null, null, null);
+        QueryPageRequest pageRequest = new QueryPageRequest(0, 20, new SortOption("lastName", SortDirection.ASC));
+
+        PagedResult<Owner> result = this.clinicService.findOwners(criteria, pageRequest);
+        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.content().get(0).getId()).isEqualTo(2);
+        assertThat(result.content().get(1).getId()).isEqualTo(4);
+    }
+
+    @Test
+    void shouldFindPetsWithAdvancedQueryAndPagination() {
+        PetQueryCriteria criteria = new PetQueryCriteria("a", null, null, null, null);
+        QueryPageRequest pageRequest = new QueryPageRequest(0, 1, new SortOption("name", SortDirection.ASC));
+
+        PagedResult<Pet> result = this.clinicService.findPets(criteria, pageRequest);
+        assertThat(result.totalElements()).isGreaterThanOrEqualTo(1);
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.totalPages()).isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    void shouldFindVisitsWithAdvancedQueryByPetAndDateSorting() {
+        VisitQueryCriteria criteria = new VisitQueryCriteria(7, null, null, null);
+        QueryPageRequest pageRequest = new QueryPageRequest(0, 20, new SortOption("date", SortDirection.DESC));
+
+        PagedResult<Visit> result = this.clinicService.findVisits(criteria, pageRequest);
+        assertThat(result.totalElements()).isEqualTo(2);
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.content().stream().allMatch(v -> v.getPet() != null && v.getPet().getId() == 7)).isTrue();
     }
 
     void clearCache() {}

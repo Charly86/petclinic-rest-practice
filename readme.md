@@ -1,4 +1,4 @@
-# REST version of Spring PetClinic Sample Application (spring-framework-petclinic extension)
+﻿# REST version of Spring PetClinic Sample Application (spring-framework-petclinic extension)
 
 [![Java Build Status](https://github.com/spring-petclinic/spring-petclinic-rest/actions/workflows/maven-build-master.yml/badge.svg)](https://github.com/spring-petclinic/spring-petclinic-rest/actions/workflows/maven-build-master.yml)
 [![Docker Build Status](https://github.com/spring-petclinic/spring-petclinic-rest/actions/workflows/docker-build.yml/badge.svg)](https://github.com/spring-petclinic/spring-petclinic-rest/actions/workflows/docker-build.yml)
@@ -35,7 +35,7 @@ You can then access petclinic here: [http://localhost:9966/petclinic/](http://lo
 There is an actuator health check route as well:
 * [http://localhost:9966/petclinic/actuator/health](http://localhost:9966/petclinic/actuator/health)
 
-## 📖 OpenAPI REST API Documentation
+## ðŸ“– OpenAPI REST API Documentation
 This project provides a RESTful API for managing a veterinary clinic's **owners, pets, veterinarians, visits, and specialties**.
 
 ### **Access Swagger UI**
@@ -43,8 +43,12 @@ Swagger UI is available at: [http://localhost:9966/petclinic/swagger-ui.html](ht
 
 API documentation (OAS 3.1) is accessible at: [http://localhost:9966/petclinic/v3/api-docs](http://localhost:9966/petclinic/v3/api-docs).
 
+### Advanced Querying
+Advanced querying (filters + pagination + sorting) for owners, pets, and isits is documented here:
+- [docs/advanced-querying.md](docs/advanced-querying.md)
 
-## 📌 API Endpoints Overview
+
+## ðŸ“Œ API Endpoints Overview
 
 | **Method** | **Endpoint** | **Description** |
 |-----------|------------|----------------|
@@ -52,10 +56,10 @@ API documentation (OAS 3.1) is accessible at: [http://localhost:9966/petclinic/v
 | **GET** | `/api/owners` | Retrieve all pet owners |
 | **GET** | `/api/owners/{ownerId}` | Get a pet owner by ID |
 | **POST** | `/api/owners` | Add a new pet owner |
-| **PUT** | `/api/owners/{ownerId}` | Update an owner’s details |
+| **PUT** | `/api/owners/{ownerId}` | Update an ownerâ€™s details |
 | **DELETE** | `/api/owners/{ownerId}` | Delete an owner |
-| **GET** | `/api/owners/{ownerId}/pets/{petId}` | Get a pet by ID (owner’s pet) |
-| **PUT** | `/api/owners/{ownerId}/pets/{petId}` | Update pet details (owner’s pet) |
+| **GET** | `/api/owners/{ownerId}/pets/{petId}` | Get a pet by ID (ownerâ€™s pet) |
+| **PUT** | `/api/owners/{ownerId}/pets/{petId}` | Update pet details (ownerâ€™s pet) |
 | **POST** | `/api/owners/{ownerId}/pets` | Add a new pet to an owner |
 | **POST** | `/api/owners/{ownerId}/pets/{petId}/visits` | Add a vet visit for a pet |
 | **Pets** |  |  |
@@ -144,7 +148,7 @@ For more details, see the [Spring Boot documentation](https://docs.spring.io/spr
 
 ### **Using HSQLDB**
 - HSQLDB works similarly to H2 as an **in-memory database**.
-- No additional setup is required—schema and sample data are loaded automatically from `src/main/resources/db/hsqldb/`.
+- No additional setup is requiredâ€”schema and sample data are loaded automatically from `src/main/resources/db/hsqldb/`.
 - Swtich to **HSQLDB** by modifying `application.properties`:
 
     ```properties
@@ -308,3 +312,4 @@ that could be used to implement the Pet Clinic then please join the community th
 The [issue tracker](https://github.com/spring-petclinic/spring-petclinic-rest/issues) is the preferred channel for bug reports, features requests and submitting pull requests.
 
 For pull requests, editor preferences are available in the [editor config](https://github.com/spring-petclinic/spring-petclinic-rest/blob/master/.editorconfig) for easy use in common text editors. Read more and download plugins at <http://editorconfig.org>.
+

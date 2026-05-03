@@ -24,6 +24,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.samples.petclinic.model.Owner;
 import org.springframework.samples.petclinic.repository.OwnerRepository;
 
+import java.util.Collection;
+
 /**
  * Spring Data JPA specialization of the {@link OwnerRepository} interface
  *
@@ -41,4 +43,9 @@ public interface SpringDataOwnerRepository extends OwnerRepository, Repository<O
     @Override
     @Query("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id =:id")
     Owner findById(@Param("id") int id);
+
+    @Override
+    default Collection<Owner> findAllForAdvancedQuery() {
+        return findAll();
+    }
 }

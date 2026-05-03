@@ -150,6 +150,11 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 		return pets;
 	}
 
+    @Override
+    public Collection<Pet> findAllForAdvancedQuery() throws DataAccessException {
+        return findAll();
+    }
+
 	@Override
 	public void delete(Pet pet) throws DataAccessException {
 		Map<String, Object> pet_params = new HashMap<>();

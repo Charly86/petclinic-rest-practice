@@ -34,6 +34,7 @@ import org.springframework.samples.petclinic.rest.dto.PetDto;
 import org.springframework.samples.petclinic.rest.dto.PetTypeDto;
 import org.springframework.samples.petclinic.rest.dto.VisitDto;
 import org.springframework.samples.petclinic.service.ClinicService;
+import org.springframework.samples.petclinic.service.query.PagedResult;
 import org.springframework.samples.petclinic.service.clinicService.ApplicationTestConfig;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
@@ -48,6 +49,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -173,11 +175,15 @@ class OwnerRestControllerTests {
     void testGetOwnersListSuccess() throws Exception {
         owners.remove(0);
         owners.remove(1);
-        given(this.clinicService.findOwnerByLastName("Davis")).willReturn(ownerMapper.toOwners(owners));
+        List<Owner> ownerModels = new ArrayList<>(ownerMapper.toOwners(owners));
+        given(this.clinicService.findOwners(any(), any()))
+            .willReturn(new PagedResult<>(ownerModels, 0, 20, owners.size(), 1));
         this.mockMvc.perform(get("/api/owners?lastName=Davis")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json"))
+            .andExpect(header().string("X-Page-Number", "0"))
+            .andExpect(header().string("X-Page-Size", "20"))
             .andExpect(jsonPath("$.[0].id").value(2))
             .andExpect(jsonPath("$.[0].firstName").value("Betty"))
             .andExpect(jsonPath("$.[1].id").value(4))
@@ -188,7 +194,8 @@ class OwnerRestControllerTests {
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetOwnersListNotFound() throws Exception {
         owners.clear();
-        given(this.clinicService.findOwnerByLastName("0")).willReturn(ownerMapper.toOwners(owners));
+        given(this.clinicService.findOwners(any(), any()))
+            .willReturn(new PagedResult<>(new ArrayList<>(), 0, 20, 0, 0));
         this.mockMvc.perform(get("/api/owners?lastName=0")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -199,7 +206,9 @@ class OwnerRestControllerTests {
     void testGetAllOwnersSuccess() throws Exception {
         owners.remove(0);
         owners.remove(1);
-        given(this.clinicService.findAllOwners()).willReturn(ownerMapper.toOwners(owners));
+        List<Owner> ownerModels = new ArrayList<>(ownerMapper.toOwners(owners));
+        given(this.clinicService.findOwners(any(), any()))
+            .willReturn(new PagedResult<>(ownerModels, 0, 20, owners.size(), 1));
         this.mockMvc.perform(get("/api/owners")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -214,10 +223,19 @@ class OwnerRestControllerTests {
     @WithMockUser(roles = "OWNER_ADMIN")
     void testGetAllOwnersNotFound() throws Exception {
         owners.clear();
-        given(this.clinicService.findAllOwners()).willReturn(ownerMapper.toOwners(owners));
+        given(this.clinicService.findOwners(any(), any()))
+            .willReturn(new PagedResult<>(new ArrayList<>(), 0, 20, 0, 0));
         this.mockMvc.perform(get("/api/owners")
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testGetOwnersListWithInvalidSortReturnsBadRequest() throws Exception {
+        this.mockMvc.perform(get("/api/owners?sort=unknownField,asc")
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
     }
 
     @Test

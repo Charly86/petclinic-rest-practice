@@ -70,6 +70,11 @@ public class JpaPetRepositoryImpl implements PetRepository {
 		return this.em.createQuery("SELECT pet FROM Pet pet").getResultList();
 	}
 
+    @Override
+    public Collection<Pet> findAllForAdvancedQuery() throws DataAccessException {
+        return findAll();
+    }
+
 	@Override
 	public void delete(Pet pet) throws DataAccessException {
 		//this.em.remove(this.em.contains(pet) ? pet : this.em.merge(pet));

@@ -119,6 +119,11 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
     }
 
     @Override
+    public Collection<Visit> findAllForAdvancedQuery() throws DataAccessException {
+        return findAll();
+    }
+
+    @Override
     public void save(Visit visit) throws DataAccessException {
         if (visit.isNew()) {
             Number newKey = this.insertVisit.executeAndReturnKey(createVisitParameterSource(visit));

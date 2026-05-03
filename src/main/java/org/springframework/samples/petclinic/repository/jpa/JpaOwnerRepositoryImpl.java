@@ -88,6 +88,11 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
         return query.getResultList();
 	}
 
+    @Override
+    public Collection<Owner> findAllForAdvancedQuery() throws DataAccessException {
+        return findAll();
+    }
+
 	@Override
 	public void delete(Owner owner) throws DataAccessException {
 		this.em.remove(this.em.contains(owner) ? owner : this.em.merge(owner));
